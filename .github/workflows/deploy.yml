@@ -17,19 +17,31 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
           script: |
-            cd /var/www/AI-VIRALCLIPS
-            git pull origin main
+            # Move to the parent directory to check for the project folder
+            cd /var/www
             
-            # Use a HereDoc to safely write the .env file
+            # 1. Bootstrap: Clone if the folder is empty/missing, otherwise pull
+            if [ ! -d "AI-VIRALCLIPS/.git" ]; then
+              echo "Project not found. Cloning repository..."
+              git clone https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git AI-VIRALCLIPS
+            fi
+            
+            cd AI-VIRALCLIPS
+            git pull origin main
+
+            # 2. Environment Setup: Create the .env file from the Secret
             cat << 'EOF' > app/.env
             ${{ secrets.PROD_ENV_FILE }}
             EOF
             
-            # Backend Setup
+            # 3. Backend Setup: Virtual Env and Dependencies
+            # We use python3.12 specifically as you installed it earlier
             python3.12 -m venv venv
             source venv/bin/activate
+            pip install --upgrade pip
             pip install -r requirements.txt
             
-            # Frontend permissions
+            # 4. Frontend: Set permissions so Nginx can read the files
             chmod -R 755 frontend
