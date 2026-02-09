@@ -37,9 +37,19 @@ def run_job(job_id, task_func, *args, **kwargs):
         update_job(job_id, status="in_progress", progress=0)
         result = task_func(*args, **kwargs)
         result_str = str(result["status"]) if isinstance(result, dict) else str(result)
-        if "file_path" in result:
-            update_job(job_id, status="completed", progress=100, result=result_str, file_path=str(result["file_path"]))
-        update_job(job_id, status="completed", progress=100, result=result_str)
+        
+        # Update job with result and file_path in ONE call
+        update_fields = {
+            "status": "completed",
+            "progress": 100,
+            "result": result_str
+        }
+        
+        if isinstance(result, dict) and "file_path" in result:
+            update_fields["file_path"] = str(result["file_path"])
+        
+        update_job(job_id, **update_fields)
+        
     except Exception as e:
         update_job(job_id, status="failed", error=str(e))
 

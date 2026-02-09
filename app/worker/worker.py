@@ -61,25 +61,34 @@ def download_worker(job_id: str, payload: dict):
     }
 
     # 3. Run the Download
+    downloaded_file = None
     try:
         # Safety Check: Strip the playlist part from the URL manually just in case
         if "&list=" in url:
             url = url.split("&list=")[0]
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([url])
+            info = ydl.extract_info(url, download=True)
+            # Get the actual filename that was downloaded
+            downloaded_file = ydl.prepare_filename(info)
             
         redis_client.hset(f"job:{job_id}", mapping={"status": "completed"})
         log_info(f"[{job_id}] Finished successfully ✅")
+        
+        # Extract just the filename from the full path
+        import os
+        filename = os.path.basename(downloaded_file) if downloaded_file else f"{job_id}.mp4"
+        
         return {
             "status": "success", 
-            "file_path": f"downloads/{job_id}.mp4"
+            "file_path": f"downloads/{filename}"
         }
         
     except Exception as e:
         log_error(f"[{job_id}] Download failed ❌")
         # Log the actual error to Redis so you can debug it via API
         redis_client.hset(f"job:{job_id}", mapping={"status": "failed", "error": str(e)})
+
 
    
 

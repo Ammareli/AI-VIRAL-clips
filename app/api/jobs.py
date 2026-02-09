@@ -38,6 +38,7 @@ async def get_job_status(job_id: str):
             "error": job.get("error"),
             "created_at": job.get("created_at"),
             "updated_at": job.get("updated_at"),
+            "file_path": job.get("file_path"),  # ← THIS WAS MISSING!
         }
     else:
         return {"message": "Job not found."}
