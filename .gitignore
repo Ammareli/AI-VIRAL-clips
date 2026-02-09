@@ -1,1 +1,14 @@
 Ai Viral Clips – Deliberate Failure Project.pdf
+.env
+ENV
+downloads
+app/__pycache__
+app/core/__pycache__
+app/models/__pycache__
+app/api/__pycache__
+app/worker/__pycache__
+app/jobs/__pycache__
+app/config/__pycache__
+app/utils/__pycache__
+
+
