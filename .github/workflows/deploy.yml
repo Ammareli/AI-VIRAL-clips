@@ -1,35 +1,22 @@
-name: Deploy to VPS
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy via SSH
+- name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          debug: true # This will give us more details if it fails
           script: |
-            # Navigate to project root
             cd /var/www/AI-VIRALCLIPS
             git pull origin main
-
-            # 1. Create the .env file from the GitHub Secret
-            echo "${{ secrets.PROD_ENV_FILE }}" > .env
             
-            # 2. Setup Backend
+            # Create the .env file
+            echo "${{ secrets.PROD_ENV_FILE }}" > app/.env
+            
+            # Setup Backend
             python3.12 -m venv venv
             source venv/bin/activate
             pip install -r requirements.txt
             
-            # 3. Frontend logic
-            # Since Nginx will serve this, we just ensure permissions are correct
+            # Frontend permissions
             chmod -R 755 frontend
